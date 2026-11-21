@@ -1,6 +1,6 @@
 import Foundation
 
-enum PaymentStatus: String {
-    case paid = "Оплачено"
+enum PaymentStatus: String, CaseIterable, Hashable {
     case pending = "Очікує оплати"
+    case paid = "Оплачено"
 }

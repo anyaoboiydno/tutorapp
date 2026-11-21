@@ -8,19 +8,24 @@ final class LoggingLessonService: LessonServiceProtocol {
     }
 
     func fetchLessons() -> [Lesson] {
-        print("[LOG] Запитуємо список уроків...")
+        print("[LOG] Завантаження списку уроків...")
         let lessons = wrappedService.fetchLessons()
-        print("[LOG] Завантажено уроків: \(lessons.count)")
+        print("[LOG] Отримано уроків: \(lessons.count)")
         return lessons
     }
     
     func addLesson(_ lesson: Lesson) {
-        print("[LOG] Додавання нового уроку для: \(lesson.student)")
+        print("[LOG] Додавання уроку для учня: \(lesson.student)")
         wrappedService.addLesson(lesson)
     }
     
     func updateLesson(_ lesson: Lesson) {
-        print("[LOG] Оновлення статусу уроку ID: \(lesson.id)")
+        print("[LOG] Оновлення уроку ID: \(lesson.id)")
         wrappedService.updateLesson(lesson)
+    }
+    
+    func deleteLesson(id: UUID) {
+        print("[LOG] Видалення уроку ID: \(id)")
+        wrappedService.deleteLesson(id: id)
     }
 }
