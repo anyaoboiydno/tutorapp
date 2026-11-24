@@ -40,6 +40,7 @@ final class ScheduleViewModel: ObservableObject {
     
     private var service: LessonServiceProtocol
     private let serviceFactory: ((DataSourceMode) -> LessonServiceProtocol)?
+    private var latestUsdRate: Double?
     
     init(
         service: LessonServiceProtocol,
@@ -54,6 +55,9 @@ final class ScheduleViewModel: ObservableObject {
         do {
             let fetched = try await service.fetchLessons()
             self.lessons = fetched.sorted { $0.startTime < $1.startTime }
+            if let rate = self.lessons.first?.usdRate {
+                self.latestUsdRate = rate
+            }
             self.loadState = self.lessons.isEmpty ? .empty : .loaded
         } catch {
             self.lessons = []
@@ -120,7 +124,8 @@ final class ScheduleViewModel: ObservableObject {
             startTime: startTime,
             isPaid: isPaid,
             homework: homework?.isEmpty == true ? nil : homework,
-            note: note?.isEmpty == true ? nil : note
+            note: note?.isEmpty == true ? nil : note,
+            usdRate: latestUsdRate
         )
         service.addLesson(newLesson)
         lessons.append(newLesson)

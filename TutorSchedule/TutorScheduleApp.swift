@@ -10,7 +10,7 @@ struct TutorScheduleApp: App {
             let baseService: LessonServiceProtocol
             switch mode {
             case .realAPI:
-                let apiClient = APIClient(baseURL: "https://jsonplaceholder.typicode.com")
+                let apiClient = APIClient(baseURL: "https://bank.gov.ua")
                 baseService = NetworkLessonService(apiClient: apiClient)
             case .stubEmpty:
                 baseService = StubLessonService(scenario: .emptyResponse)

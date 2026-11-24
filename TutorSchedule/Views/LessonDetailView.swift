@@ -16,7 +16,6 @@ struct LessonDetailView: View {
             ScrollView {
                 if let lesson = viewModel.lesson(by: lessonId) {
                     VStack(alignment: .leading, spacing: 16) {
-                        // Картка основної інформації
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -29,10 +28,18 @@ struct LessonDetailView: View {
                                         .foregroundColor(AppTheme.secondaryText)
                                 }
                                 Spacer()
-                                Text("\(lesson.price) грн")
-                                    .font(.title3)
-                                    .bold()
-                                    .foregroundColor(AppTheme.accent)
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text("\(lesson.price) грн")
+                                        .font(.title3)
+                                        .bold()
+                                        .foregroundColor(AppTheme.accent)
+                                    
+                                    if let rate = lesson.usdRate, rate > 0 {
+                                        Text(String(format: "≈ %.1f $ за курсом НБУ", Double(lesson.price) / rate))
+                                            .font(.caption)
+                                            .foregroundColor(AppTheme.secondaryText)
+                                    }
+                                }
                             }
                             
                             Divider()
@@ -78,7 +85,7 @@ struct LessonDetailView: View {
                                 HStack {
                                     Image(systemName: lesson.currentStatus == .paid ? "checkmark.seal.fill" : "clock.badge.exclamationmark")
                                         .font(.title3)
-                                    Text(lesson.currentStatus == .paid ? "Оплачено (натисніть, щоб змінити)" : "Очікує оплати (натисніть, щоб змінити)")
+                                    Text(lesson.currentStatus == .paid ? "Оплачено (натисніть, щоб змінити)" : "Очікує оплати (позначити як оплачено)")
                                         .font(.subheadline)
                                         .bold()
                                     Spacer()

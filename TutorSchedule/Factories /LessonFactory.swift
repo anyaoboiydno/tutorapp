@@ -1,4 +1,5 @@
 import Foundation
+
 final class LessonFactory {
     static func createLesson(
         student: String,
@@ -7,7 +8,8 @@ final class LessonFactory {
         startTime: Date = Date(),
         isPaid: Bool = false,
         homework: String? = nil,
-        note: String? = nil
+        note: String? = nil,
+        usdRate: Double? = nil
     ) -> Lesson {
         return Lesson(
             id: UUID(),
@@ -17,7 +19,8 @@ final class LessonFactory {
             price: price,
             currentStatus: isPaid ? .paid : .pending,
             homework: homework,
-            note: note
+            note: note,
+            usdRate: usdRate
         )
     }
 }

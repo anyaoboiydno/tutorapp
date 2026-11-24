@@ -44,7 +44,7 @@ struct ScheduleListView: View {
                         }
                     }
                 } label: {
-                    Label("Джерело API", systemImage: "network")
+                    Label("Джерело даних", systemImage: "network")
                         .foregroundColor(AppTheme.accent)
                 }
             }
@@ -257,7 +257,7 @@ struct ScheduleListView: View {
                         .font(.headline)
                         .foregroundColor(AppTheme.primaryText)
                         .lineLimit(1)
-                    Text("\(lesson.subject) • \(lesson.price) грн")
+                    Text("\(lesson.subject) • \(lesson.formattedPriceWithUSD)")
                         .font(.subheadline)
                         .foregroundColor(AppTheme.secondaryText)
                         .lineLimit(1)

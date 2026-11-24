@@ -9,6 +9,15 @@ struct Lesson: Identifiable, Hashable {
     var currentStatus: PaymentStatus
     var homework: String?
     var note: String?
+    var usdRate: Double? = nil
+    
+    var formattedPriceWithUSD: String {
+        guard let rate = usdRate, rate > 0 else {
+            return "\(price) грн"
+        }
+        let usd = Double(price) / rate
+        return String(format: "%d грн (~%.1f $)", price, usd)
+    }
 }
 
 extension Date {
