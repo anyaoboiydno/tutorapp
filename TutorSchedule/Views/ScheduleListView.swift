@@ -18,16 +18,48 @@ struct ScheduleListView: View {
             
             VStack(spacing: 12) {
                 headerCard
-                
-                if sections.isEmpty {
-                    emptyStateView
-                } else {
-                    lessonsListView
-                }
+                contentArea
             }
         }
-        .navigationTitle("Tutor Schedule")
+        .navigationTitle("TutorSchedule")
+        .task {
+            if viewModel.lessons.isEmpty && viewModel.loadState == .loading {
+                await viewModel.loadLessons()
+            }
+        }
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Menu {
+                    ForEach(DataSourceMode.allCases) { mode in
+                        Button(action: {
+                            Task {
+                                await viewModel.switchDataSource(to: mode)
+                            }
+                        }) {
+                            if viewModel.currentMode == mode {
+                                Label(mode.rawValue, systemImage: "checkmark")
+                            } else {
+                                Text(mode.rawValue)
+                            }
+                        }
+                    }
+                } label: {
+                    Label("Джерело API", systemImage: "network")
+                        .foregroundColor(AppTheme.accent)
+                }
+            }
+            
+            ToolbarItem(placement: .automatic) {
+                Button(action: {
+                    Task {
+                        await viewModel.loadLessons()
+                    }
+                }) {
+                    Label("Оновити", systemImage: "arrow.clockwise")
+                        .foregroundColor(AppTheme.accent)
+                }
+            }
+            
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {
                     router.presentAddLesson()
@@ -35,6 +67,24 @@ struct ScheduleListView: View {
                     Label("Новий урок", systemImage: "plus.circle.fill")
                         .foregroundColor(AppTheme.accent)
                 }
+            }
+        }
+    }
+    
+    @ViewBuilder
+    private var contentArea: some View {
+        switch viewModel.loadState {
+        case .loading:
+            loadingStateView
+        case .error(let message):
+            errorStateView(message: message)
+        case .empty:
+            emptyStateView(title: "Сервер повернув порожній розклад")
+        case .loaded:
+            if sections.isEmpty {
+                emptyStateView(title: "За вибраним фільтром уроків немає")
+            } else {
+                lessonsListView
             }
         }
     }
@@ -88,17 +138,73 @@ struct ScheduleListView: View {
         .padding(.top, 8)
     }
     
-    private var emptyStateView: some View {
-        VStack(spacing: 10) {
+    private var loadingStateView: some View {
+        VStack(spacing: 14) {
             Spacer()
-            Image(systemName: "sparkles")
-                .font(.system(size: 40))
-                .foregroundColor(AppTheme.accent)
-            Text("На вибраний день уроків немає")
+            ProgressView()
+                .scaleEffect(1.3)
+                .tint(AppTheme.accent)
+            Text("Оновлення розкладу...")
                 .font(.headline)
-                .foregroundColor(AppTheme.secondaryText)
+                .foregroundColor(AppTheme.primaryText)
             Spacer()
         }
+        .padding()
+    }
+    
+    private func emptyStateView(title: String) -> some View {
+        VStack(spacing: 12) {
+            Spacer()
+            Image(systemName: "tray")
+                .font(.system(size: 42))
+                .foregroundColor(AppTheme.accent)
+            Text(title)
+                .font(.headline)
+                .foregroundColor(AppTheme.primaryText)
+            Button("Оновити дані") {
+                Task {
+                    await viewModel.loadLessons()
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppTheme.accent)
+            Spacer()
+        }
+        .padding()
+    }
+    
+    private func errorStateView(message: String) -> some View {
+        VStack(spacing: 14) {
+            Spacer()
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 42))
+                .foregroundColor(AppTheme.accent)
+            
+            Text("Не вдалося завантажити дані")
+                .font(.headline)
+                .foregroundColor(AppTheme.primaryText)
+            
+            Text(message)
+                .font(.subheadline)
+                .foregroundColor(AppTheme.secondaryText)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 24)
+            
+            Button(action: {
+                Task {
+                    await viewModel.loadLessons()
+                }
+            }) {
+                Label("Повторити запит", systemImage: "arrow.clockwise")
+                    .bold()
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(AppTheme.accent)
+            Spacer()
+        }
+        .padding()
     }
     
     private var lessonsListView: some View {

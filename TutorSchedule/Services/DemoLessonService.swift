@@ -4,15 +4,15 @@ final class DemoLessonService: LessonServiceProtocol {
     private var lessons: [Lesson] = [
         LessonFactory.createLesson(
             student: "Демонстраційний учень",
-            subject: "SwiftUI Architecture",
+            subject: "SwiftUI Networking",
             price: 600,
             isPaid: false,
-            homework: "Реалізувати Router та 3 екрани",
+            homework: "Інтегрувати URLSession",
             note: "Демонстраційний запис"
         )
     ]
 
-    func fetchLessons() -> [Lesson] {
+    func fetchLessons() async throws -> [Lesson] {
         return lessons
     }
 

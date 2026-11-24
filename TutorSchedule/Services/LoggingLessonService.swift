@@ -1,5 +1,6 @@
 import Foundation
 
+// Structural Pattern: Decorator з підтримкою async/await та логуванням помилок
 final class LoggingLessonService: LessonServiceProtocol {
     private let wrappedService: LessonServiceProtocol
 
@@ -7,11 +8,16 @@ final class LoggingLessonService: LessonServiceProtocol {
         self.wrappedService = wrappedService
     }
 
-    func fetchLessons() -> [Lesson] {
-        print("[LOG] Завантаження списку уроків...")
-        let lessons = wrappedService.fetchLessons()
-        print("[LOG] Отримано уроків: \(lessons.count)")
-        return lessons
+    func fetchLessons() async throws -> [Lesson] {
+        print("[LOG] Виконується асинхронний запит на отримання уроків...")
+        do {
+            let lessons = try await wrappedService.fetchLessons()
+            print("[LOG] Успішно отримано уроків: \(lessons.count)")
+            return lessons
+        } catch {
+            print("[LOG ERROR] Помилка отримання уроків: \(error.localizedDescription)")
+            throw error
+        }
     }
     
     func addLesson(_ lesson: Lesson) {

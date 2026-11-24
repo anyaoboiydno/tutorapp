@@ -41,7 +41,6 @@ struct LessonFormView: View {
             Form {
                 Section {
                     TextField("Ім'я учня (обов'язково)", text: $student)
-                    
                     TextField("Предмет (або оберіть нижче)", text: $subject)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -71,7 +70,7 @@ struct LessonFormView: View {
                 
                 Section {
                     TextField("Вартість у грн (введіть будь-яку суму)", text: $priceText)
-                        .onChange(of: priceText) { newValue in
+                        .onChange(of: priceText) { _, newValue in
                             let filtered = newValue.filter { $0.isNumber }
                             if filtered != newValue {
                                 priceText = filtered

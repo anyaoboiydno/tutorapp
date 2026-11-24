@@ -15,18 +15,58 @@ enum DayFilter: String, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum ScheduleLoadState: Equatable {
+    case loading
+    case loaded
+    case empty
+    case error(String)
+}
+
+enum DataSourceMode: String, CaseIterable, Identifiable {
+    case realAPI = "API"
+    case stubEmpty = "Порожня відповідь"
+    case stubHttpError = "Помилка сервера"
+    case stubTransportError = "Немає інтернету"
+    case stubDecodingError = "Помилка декодування"
+    
+    var id: String { rawValue }
+}
+
+@MainActor
 final class ScheduleViewModel: ObservableObject {
     @Published var lessons: [Lesson] = []
+    @Published var loadState: ScheduleLoadState = .loading
+    @Published var currentMode: DataSourceMode = .realAPI
     
-    private let service: LessonServiceProtocol
+    private var service: LessonServiceProtocol
+    private let serviceFactory: ((DataSourceMode) -> LessonServiceProtocol)?
     
-    init(service: LessonServiceProtocol) {
+    init(
+        service: LessonServiceProtocol,
+        serviceFactory: ((DataSourceMode) -> LessonServiceProtocol)? = nil
+    ) {
         self.service = service
-        loadLessons()
+        self.serviceFactory = serviceFactory
     }
     
-    func loadLessons() {
-        self.lessons = service.fetchLessons().sorted { $0.startTime < $1.startTime }
+    func loadLessons() async {
+        loadState = .loading
+        do {
+            let fetched = try await service.fetchLessons()
+            self.lessons = fetched.sorted { $0.startTime < $1.startTime }
+            self.loadState = self.lessons.isEmpty ? .empty : .loaded
+        } catch {
+            self.lessons = []
+            self.loadState = .error(error.localizedDescription)
+        }
+    }
+    
+    func switchDataSource(to mode: DataSourceMode) async {
+        currentMode = mode
+        if let factory = serviceFactory {
+            self.service = factory(mode)
+        }
+        await loadLessons()
     }
     
     func lesson(by id: UUID) -> Lesson? {
@@ -83,24 +123,31 @@ final class ScheduleViewModel: ObservableObject {
             note: note?.isEmpty == true ? nil : note
         )
         service.addLesson(newLesson)
-        loadLessons()
+        lessons.append(newLesson)
+        lessons.sort { $0.startTime < $1.startTime }
+        loadState = lessons.isEmpty ? .empty : .loaded
     }
     
     func updateLesson(_ updatedLesson: Lesson) {
         service.updateLesson(updatedLesson)
-        loadLessons()
+        if let index = lessons.firstIndex(where: { $0.id == updatedLesson.id }) {
+            lessons[index] = updatedLesson
+            lessons.sort { $0.startTime < $1.startTime }
+        }
     }
     
     func togglePaymentStatus(lessonId: UUID) {
         guard var current = lesson(by: lessonId) else { return }
         current.currentStatus = (current.currentStatus == .pending) ? .paid : .pending
-        service.updateLesson(current)
-        loadLessons()
+        updateLesson(current)
     }
     
     func deleteLesson(id: UUID) {
         service.deleteLesson(id: id)
-        loadLessons()
+        lessons.removeAll { $0.id == id }
+        if lessons.isEmpty {
+            loadState = .empty
+        }
     }
     
     var unpaidCount: Int {
